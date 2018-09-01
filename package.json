@@ -1,6 +1,6 @@
 {
-  "name": "sans",
-  "version": "0.0.1",
+  "name": "sans-js",
+  "version": "0.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,13 +8,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dylan0150/sans.git"
+    "url": "git+https://github.com/dylan0150/sans-js.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dylan0150/sans/issues"
+    "url": "https://github.com/dylan0150/sans-js/issues"
   },
-  "homepage": "https://github.com/dylan0150/sans#readme"
+  "homepage": "https://github.com/dylan0150/sans-js#readme"
 }
