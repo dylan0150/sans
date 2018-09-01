@@ -6,9 +6,13 @@ Polyfilling/transpiling down code results in much slower, uglier code. Better to
 
 ## Installation
 
+```npm
+npm install sans-js
+```
+
 ```html
-    <script src="/path/to/ts-script.js"></script> <!-- DEV -->
-    <script src="/path/to/ts-script.min.js"></script> <!-- PRODUCTION -->
+<script src="/path/to/ts-script/lib/ts-script.js"></script> <!-- DEV -->
+<script src="/path/to/ts-script/lib/ts-script.min.js"></script> <!-- PRODUCTION -->
 ```
 
 ## Usage

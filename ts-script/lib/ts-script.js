@@ -1,47 +1,35 @@
 try {
     class TsScript extends HTMLElement {
-        constructor() {super()}
+        constructor() { super(); }
         connectedCallback() {
-            var src = this.getAttribute("src")
-            var src_parts = src.split('.')
-            var ext = src_parts.pop()
-            if ( ext !== "ts" ) {
-                throw new Error("Unsupported extention"+ext+this.toString())
-            }
-            var script = document.createElement("script")
-            var version = this.getSupportedVersion()
-            src_parts.push(version)
-            src_parts.push("js")
-            script.setAttribute("src", src_parts.join("."))
-            document.head.appendChild(script)
-        }
-        getSupportedVersion() {
-            var version = "es3"
-            try {
-                eval('"use strict";\
-                var a={get a(){return this.a},set a(b){this.a=b},new:1,};var a="a"[0];var b=[0,]')
-                version = "es5"
-            } catch (e) { return version }
-            try {
-                eval("let a=1;const b=2;(a=1,...args)=>{ if (`${a}` !== String(a)) throw a;}")
-                version = "es6"
-            } catch (e) { return version }
-            try {
-                eval("2**2;")
-                version = "es2016"
-            } catch (e) { return version }
-            try {
-                eval("async function a(b,){return await b};function* b(a,){yield a}")
-                version = "es2017"
-            } catch (e) { return version }
-            try {
-                eval("async function f(){ for await (const x of createAsyncIterable(['a','b'])){}};function a({a,...rest}){return{a, ...rest}}")
-                version = "es2018"
-            } catch (e) { return version }
-            return version
+            var src_parts = this.getAttribute("src").split('.');
+            var script = document.createElement("script");
+            src_parts.pop();
+            src_parts.push(TsScript.version);
+            src_parts.push("js");
+            script.setAttribute("src", src_parts.join("."));
+            this.appendChild(script);
         }
     }
-    window.customElements.define('ts-script', TsScript)
+    TsScript.version = (function () {
+        var version = "es3";
+        try {
+            eval('"use strict";\
+                var a={get a(){return this.a},set a(b){this.a=b},new:1,};var a="a"[0];var b=[0,]');
+            version = "es5";
+            eval("let a=1;const b=2;(a=1,...args)=>{ if (`${a}` !== String(a)) throw a;}");
+            version = "es6";
+            eval("2**2;");
+            version = "es2016";
+            eval("async function a(b,){return await b};function* b(a,){yield a}");
+            version = "es2017";
+            eval("async function f(){ for await (const x of createAsyncIterable(['a','b'])){}};function a({a,...rest}){return{a, ...rest}}");
+            version = "es2018";
+        }
+        catch (e) { }
+        return version;
+    })();
+    window.customElements.define('ts-script', TsScript);
 } catch (e) {
     var __extends = (this && this.__extends) || (function () {
         var extendStatics = function (d, b) {
@@ -62,59 +50,32 @@ try {
             return _super.call(this) || this;
         }
         TsScript.prototype.connectedCallback = function () {
-            var src = this.getAttribute("src");
-            var src_parts = src.split('.');
-            var ext = src_parts.pop();
-            if (ext !== "ts") {
-                throw new Error("Unsupported extention" + ext + this.toString());
-            }
+            var src_parts = this.getAttribute("src").split('.');
             var script = document.createElement("script");
-            var version = this.getSupportedVersion();
-            src_parts.push(version);
+            src_parts.pop();
+            src_parts.push(TsScript.version);
             src_parts.push("js");
             script.setAttribute("src", src_parts.join("."));
-            document.head.appendChild(script);
+            this.appendChild(script);
         };
-        TsScript.prototype.getSupportedVersion = function () {
+        TsScript.version = (function () {
             var version = "es3";
             try {
                 eval('"use strict";\
                 var a={get a(){return this.a},set a(b){this.a=b},new:1,};var a="a"[0];var b=[0,]');
                 version = "es5";
-            }
-            catch (e) {
-                return version;
-            }
-            try {
                 eval("let a=1;const b=2;(a=1,...args)=>{ if (`${a}` !== String(a)) throw a;}");
                 version = "es6";
-            }
-            catch (e) {
-                return version;
-            }
-            try {
                 eval("2**2;");
                 version = "es2016";
-            }
-            catch (e) {
-                return version;
-            }
-            try {
                 eval("async function a(b,){return await b};function* b(a,){yield a}");
                 version = "es2017";
-            }
-            catch (e) {
-                return version;
-            }
-            try {
                 eval("async function f(){ for await (const x of createAsyncIterable(['a','b'])){}};function a({a,...rest}){return{a, ...rest}}");
                 version = "es2018";
             }
-            catch (e) {
-                return version;
-            }
+            catch (e) { }
             return version;
-        };
+        })();
         return TsScript;
     }(HTMLElement));
     window.customElements.define('ts-script', TsScript);    
