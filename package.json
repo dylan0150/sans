@@ -16,5 +16,14 @@
   "bugs": {
     "url": "https://github.com/dylan0150/sans-js/issues"
   },
-  "homepage": "https://github.com/dylan0150/sans-js#readme"
+  "homepage": "https://github.com/dylan0150/sans-js#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "@webpack-cli/init": "^0.1.0",
+    "express": "^4.16.3",
+    "ts-loader": "^5.0.0",
+    "typescript": "^3.0.3",
+    "webpack": "^4.17.2",
+    "webpack-cli": "^3.1.0"
+  }
 }
