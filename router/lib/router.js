@@ -75,15 +75,13 @@ class Router extends HTMLElement {
                     .then((html) => {
                     this.hidden = false;
                     this.innerHTML = html;
-                })
-                    .catch(err => {
-                    console.log(err);
                 });
             }
             this.hidden = false;
         }
         else {
             this.hidden = true;
+            return this.load();
         }
     }
     async load() {
@@ -101,15 +99,29 @@ class Router extends HTMLElement {
 Router.hash_prefix = "/";
 Router.params = {};
 Router.routes = [];
+Router.otherwise = "";
 window.addEventListener("hashchange", event => {
     let hash = "#" + event.newURL.split("#").pop();
     let res = Router.isValidRoute(hash);
     if (!res.valid) {
-        return event.preventDefault();
+        let has_previous_route = event.oldURL.split("#").length > 1;
+        if (!has_previous_route) {
+            Router.go(Router.otherwise);
+        }
+        else {
+            let old_hash = event.oldURL.split("#").pop();
+            if (Router.isValidRoute("#" + old_hash).valid) {
+                window.location.hash = old_hash;
+                return event.preventDefault();
+            }
+            else {
+                Router.go(Router.otherwise);
+            }
+        }
     }
     if (res.longest_path.length < hash.length) {
         window.location.hash = Router.hash_prefix + res.longest_path;
-        return event.preventDefault();
+        event.preventDefault();
     }
     document.querySelectorAll("sans-route").forEach(element => {
         element instanceof Router && element.connectedCallback();

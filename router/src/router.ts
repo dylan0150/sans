@@ -7,6 +7,7 @@ class Router extends HTMLElement {
     static hash_prefix           = "/"
     static params                = {}
     static routes: Array<Router> = []
+    static otherwise             = ""
 
     static go(path) {
         window.location.hash = Router.hash_prefix + path
@@ -95,13 +96,11 @@ class Router extends HTMLElement {
                     this.hidden = false
                     this.innerHTML = html
                 })
-                .catch(err => {
-                    console.log(err)
-                })
             }
             this.hidden = false
         } else {
             this.hidden = true
+            return this.load()
         }
     }
 
@@ -124,12 +123,23 @@ window.addEventListener("hashchange", event => {
     let res  = Router.isValidRoute(hash)
 
     if ( !res.valid ) {
-        return event.preventDefault()
+        let has_previous_route = event.oldURL.split("#").length > 1
+        if (!has_previous_route) {
+            Router.go(Router.otherwise)
+        } else {
+            let old_hash = event.oldURL.split("#").pop()
+            if ( Router.isValidRoute("#" + old_hash).valid ) {
+                window.location.hash = old_hash
+                return event.preventDefault()
+            } else {
+                Router.go(Router.otherwise)
+            }
+        }
     }
 
     if ( res.longest_path.length < hash.length ) {
-        window.location.hash = Router.hash_prefix+res.longest_path
-        return event.preventDefault()
+        window.location.hash = Router.hash_prefix + res.longest_path
+        event.preventDefault()
     }
 
     document.querySelectorAll("sans-route").forEach(element => {
