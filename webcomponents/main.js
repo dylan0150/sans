@@ -1,30 +1,29 @@
-;(function NBS() {
-    const ALL_CUSTOM_ELEMENTS = new Map()
+;(() => {
+    const ALL_COMPONENTS = {}
 
     const getScopeVal = (keyString, scope) => {
         const keyParts = keyString.trim().split('.')
-
+    
         let value = scope
         for (const part of keyParts) {
             value = value[part]
             if (!value) return undefined
         }
-
+    
         return value
     }
-
+    
     const parseConditional = (string, conditional) => {
         const parts = string.split(conditional)
         if (parts.length <= 1) return null
-
+    
         const left = parts.shift()
         const right = parts.join(conditional)
-
+    
         return [ left, right ]
     }
-
-    const evaluateTemplate = (template, scope) => {
-
+    
+    const evaluateTemplate = (template, scope) => {    
         const ternaryConditions = parseConditional(template, '?')
         if (ternaryConditions) {
             const [ condition, results ] = ternaryConditions
@@ -33,22 +32,22 @@
                 ? evaluateTemplate(_true.trim(), scope)
                 : evaluateTemplate(_false.trim(), scope)
         }
-
+    
         const andConditions = parseConditional(template, '&&')
         if (andConditions) {
             const [ left, right ] = andConditions
             return evaluateTemplate(left.trim(), scope) && evaluateTemplate(right.trim(), scope)
         }
-
+    
         const orConditions = parseConditional(template, '||')
         if (orConditions) {
             const [ left, right ] = orConditions
             return evaluateTemplate(left.trim(), scope) || evaluateTemplate(right.trim(), scope)
         }
-
+    
         return getScopeVal(template, scope)
     }
-
+    
     const parseTemplateString = (string, scope) => {
         return string.replace(/\${.*}/g, val => {
             return val
@@ -59,17 +58,17 @@
                     const value = evaluateTemplate(template.replace(/&amp;/g, '&'), scope)
     
                     return value instanceof Function
-                        ? value(current)
+                        ? value.bind(scope)(current)
                         : value
                 }, null)
         })
     }
 
-    const createElement = (name, scope={}) => {
+    const create = (name, scope) => {
         class CustomElement extends HTMLElement {
-            constructor() {
+            constructor () {
                 super()
-        
+
                 this.scope = new Proxy(scope, {
                     set: (scope, key, value) => {
                         scope[key] = value
@@ -80,43 +79,100 @@
                 
                 CustomElement.all.push(this)
             }
-        
-            connectedCallback() {
-                
+
+            init () {
+                this.bind()
+                this.render()
             }
-    
-            render() {
-                const attrs = this.attrs || new Map(this.getAttributeNames().map(attr => [attr, this.getAttribute(attr)]))
+
+            bind () {
+                const bindings = this.getAttributeNames().reduce((bindings, key) => {
+                    const keyParts = key.split('.')
+                    if (keyParts.length > 1 && keyParts.shift() === 'bind') {
+                        bindings[keyParts.pop()] = this.getAttribute(key)
+                    }
+                    return bindings
+                }, {})
+                
+                if (this.observer) this.observer.disconnect()
+                this.observer = new MutationObserver(mutations => {
+                    for (const mutation of mutations) {
+                        const attr = mutation.attributeName
+
+                        const key = this.bindings[attr]
+                        const value = this.getAttribute(attr)
+
+                        if (this.scope[key] !== value) this.scope[key] = value
+                    }
+                })
+                this.observer.observe(this, {
+                    attributes: true,
+                    attributeFilter: Object.keys(bindings),
+                })
+
+                this.bindings = bindings
+            }
+
+            render () {
+                const attrs = this.attrs || this.getAttributeNames().map(key => [key, this.getAttribute(key)])
                 for (const [key, value] of attrs) {
                     this.setAttribute(key, parseTemplateString(value, this.scope))
                 }
                 this.attrs = attrs
-    
+
                 const template = this.template || this.innerHTML
                 this.innerHTML = parseTemplateString(template, this.scope)
                 this.template = template
+
+                for (const attr in this.bindings) {
+                    this.setAttribute(attr, this.scope[this.bindings[attr]])
+                }
             }
         }
         CustomElement.all = []
-    
-        ALL_CUSTOM_ELEMENTS.set(name, CustomElement)
-        window.customElements.define(name, CustomElement)
+
+        ALL_COMPONENTS[name] = CustomElement
+        customElements.define(name, CustomElement)
+
+        return CustomElement
     }
 
-    window.NBS = {
-        createElement
-    }
-    
-    window.addEventListener('DOMContentLoaded', event => {
-        for (const [name, element] of ALL_CUSTOM_ELEMENTS) {
-            for (const instance of element.all) {
-                instance.render()
+    const init = () => {
+        for (const name in ALL_COMPONENTS) {
+            const Component = ALL_COMPONENTS[name]
+            for (const component of Component.all) {
+                component.init()
             }
         }
-    })
+    }
+    const render = () => {
+        for (const name in ALL_COMPONENTS) {
+            const Component = ALL_COMPONENTS[name]
+            for (const component of Component.all) {
+                component.render()
+            }
+        }
+    }
+
+    if (window.define instanceof Function) {
+        return define(() => ({
+            create,
+            parseTemplateString,
+            render,
+            init,
+        }))
+    }
+
+    window.component = {
+        create,
+        parseTemplateString,
+        render,
+        init,
+    }
+    document.addEventListener('DOMContentLoaded', init)
 })()
 
-NBS.createElement('my-component', {
+component.create('my-component', {
     fname: 'john',
     lname: 'doe',
     get fullname () {
